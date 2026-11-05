@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum RunStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum WorkplaceType {
+  REMOTE
+  HYBRID
+  ONSITE
+  UNKNOWN
+}
+
+model SavedSearch {
+  id String @id @default(cuid())
+  name String
+  query Json
+  enabled Boolean @default(true)
+  createdAt DateTime @default(now())
+  runs DiscoveryRun[]
+}
+model DiscoveryRun {
+  id String @id @default(cuid())
+  savedSearchId String
+  savedSearch SavedSearch @relation(fields: [savedSearchId], references: [id])
+  status RunStatus @default(QUEUED)
+  startedAt DateTime?
+  completedAt DateTime?
+  jobsFound Int @default(0)
+  jobsNew Int @default(0)
+  error String?
+  createdAt DateTime @default(now())
+}
+model JobPosting {
+  id String @id @default(cuid())
+  title String
+  company String
+  description String?
+  location String?
+  workplaceType WorkplaceType @default(UNKNOWN)
+  postedAt DateTime?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  canonicalApplyUrl String?
+  sources JobSourceRecord[]
+  @@index([postedAt])
+}
+model JobSourceRecord {
+  id String @id @default(cuid())
+  provider String
+  externalId String
+  sourceUrl String?
+  applyUrl String?
+  jobPostingId String
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id])
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  @@unique([provider, externalId])
+}
