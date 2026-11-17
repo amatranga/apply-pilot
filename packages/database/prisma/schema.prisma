@@ -26,6 +26,11 @@ model SavedSearch {
   enabled Boolean @default(true)
   createdAt DateTime @default(now())
   runs DiscoveryRun[]
+  intervalMinutes Int @default(1440)
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+  updatedAt DateTime @default(now()) @updatedAt
+  @@index([enabled, nextRunAt])
 }
 model DiscoveryRun {
   id String @id @default(cuid())
@@ -38,6 +43,8 @@ model DiscoveryRun {
   jobsNew Int @default(0)
   error String?
   createdAt DateTime @default(now())
+  querySnapshot Json?
+  trigger       String @default("MANUAL")
 }
 model JobPosting {
   id String @id @default(cuid())
