@@ -56,7 +56,7 @@ export class JSearchAdapter implements JobSourceAdapter {
           },
         }
       );
-      // if (!response.ok) throw new Error(`JSearch HTTP ${response.status}`);
+
       if (!response.ok) {
         const errorBody = await response.text();
 
