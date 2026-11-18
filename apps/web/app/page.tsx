@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import CandidateProfileEditor from "./components/CandidateProfileEditor";
+
 type SavedSearch = { 
   id: string; 
   name: string; 
@@ -176,6 +178,8 @@ export default function Home() {
       <button onClick={refresh}>Refresh jobs</button>
       
       <p role="status">{message}</p>
+
+      <CandidateProfileEditor token={token} />
       
       <h2>Saved searches</h2>
       
