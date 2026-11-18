@@ -7,7 +7,14 @@ export default [
   ...tseslint.configs.recommended,
   prettier,
   {
-    ignores: ['node_modules', '.next', 'dist', 'build'],
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/coverage/**',
+      '**/next-env.d.ts',
+    ],
   },
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
@@ -29,7 +36,7 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: true,
+        projectService: true,
       },
     },
   },

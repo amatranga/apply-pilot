@@ -1,1 +1,17 @@
-{"name":"@applypilot/worker","private":true,"type":"module","scripts":{"dev":"tsx watch src/index.ts"},"dependencies":{"@applypilot/database":"workspace:*","@applypilot/discovery":"workspace:*","bullmq":"^5.34.0","ioredis":"^5.4.2"},"devDependencies":{"tsx":"^4.19.2"}}
+{
+  "name": "@applypilot/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@applypilot/database": "workspace:*",
+    "@applypilot/discovery": "workspace:*",
+    "bullmq": "^5.34.0",
+    "ioredis": "^5.4.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
