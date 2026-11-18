@@ -67,7 +67,15 @@ export async function executeDiscovery(
 
           await tx.jobPosting.update({
             where: { id: existing.jobPostingId },
-            data: { lastSeenAt: new Date() },
+            data: {
+              lastSeenAt: new Date(),
+              employmentType:
+                job.employmentType !== 'UNKNOWN'
+                  ? job.employmentType
+                  : undefined,
+              salaryMinUsd: job.salaryMinUsd ?? undefined,
+              salaryMaxUsd: job.salaryMaxUsd ?? undefined,
+            },
           });
 
           return false;
@@ -80,6 +88,9 @@ export async function executeDiscovery(
             description: job.description,
             location: job.location,
             workplaceType: job.workplaceType,
+            employmentType: job.employmentType,
+            salaryMinUsd: job.salaryMinUsd,
+            salaryMaxUsd: job.salaryMaxUsd,
             postedAt: job.postedAt,
             canonicalApplyUrl: job.applyUrl,
             sources: {

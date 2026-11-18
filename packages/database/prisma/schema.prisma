@@ -12,6 +12,13 @@ enum RunStatus {
   FAILED
 }
 
+enum EmploymentType {
+  FULL_TIME
+  CONTRACT
+  PART_TIME
+  UNKNOWN
+}
+
 enum WorkplaceType {
   REMOTE
   HYBRID
@@ -53,6 +60,9 @@ model JobPosting {
   description String?
   location String?
   workplaceType WorkplaceType @default(UNKNOWN)
+  employmentType EmploymentType @default(UNKNOWN)
+  salaryMinUsd Int?
+  salaryMaxUsd Int?
   postedAt DateTime?
   firstSeenAt DateTime @default(now())
   lastSeenAt DateTime @default(now())

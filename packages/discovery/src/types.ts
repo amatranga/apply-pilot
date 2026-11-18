@@ -15,6 +15,9 @@ export type NormalizedJob = {
   description: string | null;
   location: string | null;
   workplaceType: 'REMOTE' | 'HYBRID' | 'ONSITE' | 'UNKNOWN';
+  employmentType: 'FULL_TIME' | 'CONTRACT' | 'PART_TIME' | 'UNKNOWN';
+  salaryMinUsd: number | null;
+  salaryMaxUsd: number | null;
   postedAt: Date | null;
   sourceUrl: string | null;
   applyUrl: string | null;

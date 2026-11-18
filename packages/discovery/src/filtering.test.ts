@@ -3,7 +3,7 @@ import {
   filterJob,
   type FilterableJob,
   type FilterPreferences,
-} from '../../../../applypilot-filtering-v0.4-overlay/packages/discovery/src/filtering';
+} from './filtering';
 
 const preferences: FilterPreferences = {
   excludedCompanies: ['Inspira Financial'],

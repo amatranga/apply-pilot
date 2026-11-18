@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@applypilot/database';
 import { authorized } from '../_lib/auth';
+import { CandidateProfileInputSchema } from '../_lib/candidate-profile';
+import { filterJob } from '@applypilot/discovery';
 
 export async function GET(request: Request) {
   if (!authorized(request))
@@ -20,5 +22,35 @@ export async function GET(request: Request) {
     take: 100,
   });
 
-  return NextResponse.json({ jobs });
+  const savedProfile = await prisma.candidateProfile.findUnique({
+    where: { id: 'primary' },
+    select: {
+      name: true,
+      headline: true,
+      location: true,
+      yearsOfExperience: true,
+      skills: true,
+      preferences: true,
+    },
+  });
+  const profile = savedProfile
+    ? CandidateProfileInputSchema.safeParse(savedProfile)
+    : null;
+  if (profile && !profile.success) {
+    return NextResponse.json(
+      {
+        error: 'Saved candidate profile is invalid',
+        issues: profile.error.flatten(),
+      },
+      { status: 500 }
+    );
+  }
+  const preferences = profile?.success ? profile.data.preferences : null;
+  return NextResponse.json({
+    profileConfigured: preferences !== null,
+    jobs: jobs.map((job) => ({
+      ...job,
+      evaluation: preferences ? filterJob(job, preferences) : null,
+    })),
+  });
 }

@@ -20,6 +20,10 @@ const RawJob = z.object({
   job_employment_type: z.string().nullish(),
   job_employment_types: z.array(z.string()).nullish(),
   job_description: z.string().nullish(),
+  job_min_salary: z.number().nullish(),
+  job_max_salary: z.number().nullish(),
+  job_salary_period: z.string().nullish(),
+  job_salary_currency: z.string().nullish(),
   job_city: z.string().nullish(),
   job_state: z.string().nullish(),
   job_country: z.string().nullish(),
@@ -35,6 +39,35 @@ const ResponseSchema = z.object({
   parameters: Parameters,
   data: z.object({ jobs: z.array(RawJob) }),
 });
+
+export function normalizeEmploymentType(
+  values: string[]
+): NormalizedJob['employmentType'] {
+  const normalized = values.map((value) =>
+    value.toUpperCase().replace(/[\s-]+/g, '_')
+  );
+  const mapped = normalized.map((value): NormalizedJob['employmentType'] => {
+    if (value === 'FULLTIME' || value === 'FULL_TIME') return 'FULL_TIME';
+    if (value === 'CONTRACT' || value === 'CONTRACTOR') return 'CONTRACT';
+    if (value === 'PARTTIME' || value === 'PART_TIME') return 'PART_TIME';
+    return 'UNKNOWN';
+  });
+  const known = [...new Set(mapped.filter((value) => value !== 'UNKNOWN'))];
+  return known.length === 1 ? known[0] : 'UNKNOWN';
+}
+
+/** Only use a verified annual USD amount; do not compare hourly or foreign-currency amounts. */
+export function annualUsdSalary(
+  amount: number | null | undefined,
+  currency: string | null | undefined,
+  period: string | null | undefined
+): number | null {
+  if (amount == null || !Number.isFinite(amount) || amount < 0) return null;
+  if (currency?.toUpperCase() !== 'USD') return null;
+  if (!['YEAR', 'ANNUAL', 'YEARLY'].includes(period?.toUpperCase() ?? ''))
+    return null;
+  return Math.round(amount);
+}
 
 export class JSearchAdapter implements JobSourceAdapter {
   readonly provider = 'jsearch';
@@ -91,6 +124,23 @@ export class JSearchAdapter implements JobSourceAdapter {
             [job.job_city, job.job_state, job.job_country]
               .filter(Boolean)
               .join(', ') || null,
+          employmentType: normalizeEmploymentType(
+            job.job_employment_types?.length
+              ? job.job_employment_types
+              : job.job_employment_type
+                ? [job.job_employment_type]
+                : []
+          ),
+          salaryMinUsd: annualUsdSalary(
+            job.job_min_salary,
+            job.job_salary_currency,
+            job.job_salary_period
+          ),
+          salaryMaxUsd: annualUsdSalary(
+            job.job_max_salary,
+            job.job_salary_currency,
+            job.job_salary_period
+          ),
           workplaceType: job.job_is_remote === true ? 'REMOTE' : 'UNKNOWN',
           postedAt:
             job.job_posted_at_datetime_utc &&

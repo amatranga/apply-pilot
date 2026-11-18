@@ -23,6 +23,12 @@ type Run = {
   createdAt: string;
 };
 
+type FilterEvaluation = {
+  eligible: boolean;
+  reasons: Array<{ code: string; message: string }>;
+  unknowns: Array<{ code: string; message: string }>;
+};
+
 type Job = {
   id: string;
   title: string;
@@ -30,6 +36,10 @@ type Job = {
   location: string | null;
   postedAt: string | null;
   canonicalApplyUrl: string | null;
+  employmentType: string;
+  salaryMinUsd: number | null;
+  salaryMaxUsd: number | null;
+  evaluation: FilterEvaluation | null;
 };
 
 export default function Home() {
@@ -40,6 +50,8 @@ export default function Home() {
   const [runs, setRuns] = useState<Record<string, Run[]>>({});
   const [intervalMinutes, setIntervalMinutes] = useState(1440);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [showExcluded, setShowExcluded] = useState(false);
+  const [profileConfigured, setProfileConfigured] = useState(false);
   const [message, setMessage] = useState('');
   const headers = () => ({
     'Content-Type': 'application/json',
@@ -148,7 +160,10 @@ export default function Home() {
 
       if (!response.ok) throw new Error(await response.text());
 
-      setJobs((await response.json()).jobs);
+      const data: { jobs: Job[]; profileConfigured: boolean } =
+        await response.json();
+      setJobs(data.jobs);
+      setProfileConfigured(data.profileConfigured);
       setMessage('Jobs refreshed');
     } catch (error) {
       setMessage(String(error));
@@ -247,23 +262,61 @@ export default function Home() {
         ))}
       </ul>
       <h2>Discovered jobs</h2>
+      {!profileConfigured && (
+        <p>
+          Load and save a candidate profile to enable eligibility filtering.
+        </p>
+      )}
+      <p>
+        {jobs.filter((job) => job.evaluation?.eligible === false).length}{' '}
+        excluded of {jobs.length} loaded jobs.
+      </p>
+      <label>
+        <input
+          type="checkbox"
+          checked={showExcluded}
+          onChange={(e) => setShowExcluded(e.target.checked)}
+        />
+        Show excluded jobs
+      </label>
       <ul>
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <strong>{job.title}</strong>— {job.company}(
-            {job.location ?? 'Location unspecified'})
-            {job.postedAt && `— ${new Date(job.postedAt).toLocaleString()}`}
-            {job.canonicalApplyUrl && (
-              <a
-                href={job.canonicalApplyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Apply
-              </a>
-            )}
-          </li>
-        ))}
+        {jobs
+          .filter((job) => showExcluded || job.evaluation?.eligible !== false)
+          .map((job) => (
+            <li key={job.id}>
+              <strong>{job.title}</strong>— {job.company}(
+              {job.location ?? 'Location unspecified'})
+              {job.postedAt && `— ${new Date(job.postedAt).toLocaleString()}`}
+              {' — '}
+              {job.employmentType === 'UNKNOWN'
+                ? 'Employment unspecified'
+                : job.employmentType}
+              {job.salaryMaxUsd != null &&
+                ` — up to $${job.salaryMaxUsd.toLocaleString('en-US')} annual USD`}
+              {job.evaluation && (
+                <div>
+                  <strong>
+                    {job.evaluation.eligible ? 'Eligible' : 'Excluded'}
+                  </strong>
+                  {job.evaluation.reasons.map((reason) => (
+                    <p key={reason.code}>Excluded: {reason.message}</p>
+                  ))}
+                  {job.evaluation.unknowns.map((unknown) => (
+                    <p key={unknown.code}>Unverified: {unknown.message}</p>
+                  ))}
+                </div>
+              )}
+              {job.canonicalApplyUrl && (
+                <a
+                  href={job.canonicalApplyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Apply
+                </a>
+              )}
+            </li>
+          ))}
       </ul>
     </main>
   );
