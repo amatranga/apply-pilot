@@ -72,3 +72,17 @@ model JobSourceRecord {
   lastSeenAt DateTime @default(now())
   @@unique([provider, externalId])
 }
+
+// One profile uses id="primary" in the MVP. Future auth can associate userId.
+model CandidateProfile {
+  id                String   @id @default(cuid())
+  userId            String?  @unique
+  name              String
+  headline          String?
+  location          String?
+  yearsOfExperience Int?
+  skills            Json
+  preferences       Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+}
